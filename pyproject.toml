@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "movie-recommender"
+version = "0.1.0"
+description = "Content-based movie recommender with CLI and Flask UI"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+    {name = "Vraj Gosai"}
+]
+dependencies = [
+    "flask",
+    "pandas",
+    "scikit-learn",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+]
+
+[project.urls]
+Homepage = "https://github.com/your-username/movie-recommender"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["movie_recommender*"]

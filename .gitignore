@@ -1,0 +1,10 @@
+__pycache__/
+.venv/
+venv/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.env
+.DS_Store
+data/movies_full.csv
