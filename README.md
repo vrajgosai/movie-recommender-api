@@ -8,7 +8,8 @@
 Content-based movie recommendations powered by TF-IDF over genres, with:
 - A reusable Python package (`movie_recommender`)
 - CLI tool for quick lookups (`python recommender.py "Toy Story"`)
-- Flask JSON API + polished vanilla JS demo (`/`)
+- Flask JSON API + **Premium Dark Mode UI** (`/`)
+- **Smart Recommendations** using Genres + Keywords + Overview
 - Pytest coverage for core behaviours
 
 ---
@@ -58,6 +59,8 @@ pytest
 │   ├── data.py            # loading/cleaning helpers
 │   └── recommender.py     # MovieRecommender + Recommendation dataclass
 ├── recommender.py         # CLI wrapper
+├── static/
+│   └── style.css          # Premium UI styles
 ├── templates/index.html   # Demo UI
 ├── tests/
 │   ├── conftest.py

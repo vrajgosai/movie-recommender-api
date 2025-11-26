@@ -17,8 +17,11 @@ class Recommendation:
 
     title: str
     score: float
+    year: int
+    rating: float
+    overview: str
 
-    def to_dict(self) -> dict[str, float | str]:
+    def to_dict(self) -> dict[str, float | str | int]:
         """Return a JSON-serialisable representation."""
         return asdict(self)
 
@@ -32,8 +35,16 @@ class MovieRecommender:
 
         # Work on a copy with clean index to align matrices and rows.
         self._movies = movies.reset_index(drop=True).copy()
-        self._vectorizer = TfidfVectorizer()
-        self._tfidf_matrix = self._vectorizer.fit_transform(self._movies["genres"])
+        
+        # Combine features for TF-IDF
+        self._movies["combined_features"] = (
+            self._movies["genres"] + " " + 
+            self._movies["keywords"] + " " + 
+            self._movies["overview"]
+        )
+        
+        self._vectorizer = TfidfVectorizer(stop_words="english")
+        self._tfidf_matrix = self._vectorizer.fit_transform(self._movies["combined_features"])
 
     @property
     def movies(self) -> pd.DataFrame:
@@ -63,7 +74,13 @@ class MovieRecommender:
         ranked_indices = [i for i in ranked_indices if i != idx][:top_n]
 
         recommendations = [
-            Recommendation(title=self._movies.iloc[i]["title"], score=float(similarity_vector[i]))
+            Recommendation(
+                title=self._movies.iloc[i]["title"],
+                score=float(similarity_vector[i]),
+                year=int(self._movies.iloc[i]["year"]),
+                rating=float(self._movies.iloc[i]["vote_average"]),
+                overview=str(self._movies.iloc[i]["overview"]),
+            )
             for i in ranked_indices
         ]
         return recommendations

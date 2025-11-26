@@ -3,118 +3,34 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Movie Recommender Demo</title>
-    <style>
-      :root {
-        color-scheme: light dark;
-        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        line-height: 1.5;
-      }
-
-      body {
-        margin: 0;
-        padding: 2rem;
-        display: flex;
-        min-height: 100vh;
-        justify-content: center;
-        background: radial-gradient(circle at top, #f9fafb, #e5e7eb);
-      }
-
-      main {
-        max-width: 640px;
-        width: 100%;
-        padding: 2rem;
-        border-radius: 16px;
-        box-shadow: 0 20px 45px rgba(15, 23, 42, 0.12);
-        background: rgba(255, 255, 255, 0.92);
-        backdrop-filter: blur(6px);
-      }
-
-      h1 {
-        font-size: clamp(1.8rem, 2.4vw, 2.4rem);
-        margin-top: 0;
-      }
-
-      form {
-        display: grid;
-        gap: 1rem;
-        margin-top: 1.5rem;
-      }
-
-      label {
-        font-weight: 600;
-      }
-
-      input,
-      button {
-        font: inherit;
-        padding: 0.75rem 1rem;
-        border-radius: 8px;
-        border: 1px solid #cbd5f5;
-      }
-
-      input:focus {
-        outline: 2px solid #2563eb;
-        border-color: transparent;
-      }
-
-      button {
-        background: linear-gradient(135deg, #2563eb, #7c3aed);
-        color: white;
-        border: none;
-        cursor: pointer;
-      }
-
-      button:disabled {
-        opacity: 0.6;
-        cursor: wait;
-      }
-
-      ul {
-        list-style: none;
-        padding: 0;
-        margin: 1.5rem 0 0;
-      }
-
-      li {
-        padding: 0.6rem 0.75rem;
-        border-radius: 8px;
-        background: rgba(37, 99, 235, 0.08);
-        margin-bottom: 0.5rem;
-        display: flex;
-        justify-content: space-between;
-      }
-
-      .score {
-        font-weight: 600;
-        color: #1d4ed8;
-      }
-
-      .suggestions {
-        margin-top: 1.5rem;
-        padding: 1rem;
-        border-radius: 12px;
-        background: rgba(251, 191, 36, 0.15);
-      }
-    </style>
+    <title>Movie Recommender AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
   </head>
   <body>
     <main>
-      <h1>🎬 Movie Recommender</h1>
-      <p>Search a title to discover similar movies based on genre similarity.</p>
+      <h1>Movie Recommender AI</h1>
+      <p class="subtitle">Discover your next favorite film with our advanced content-based engine.</p>
+      
       <form id="search-form">
-        <div>
-          <label for="title">Movie title</label>
-          <input id="title" name="title" placeholder="e.g. The Matrix" required />
+        <div class="input-group">
+          <label for="title">Movie Title</label>
+          <input id="title" name="title" placeholder="e.g. Inception, The Matrix..." required autocomplete="off" />
         </div>
-        <div>
-          <label for="limit">How many recommendations?</label>
+        
+        <div class="input-group">
+          <label for="limit">Number of Recommendations</label>
           <input id="limit" name="limit" type="number" value="5" min="1" max="20" />
         </div>
-        <button type="submit">Recommend</button>
+        
+        <button type="submit">Generate Recommendations</button>
       </form>
+      
       <section id="results"></section>
     </main>
+
     <script>
       const form = document.getElementById("search-form");
       const resultsContainer = document.getElementById("results");
@@ -125,8 +41,12 @@
         const params = new URLSearchParams(formData);
 
         const submitButton = form.querySelector("button[type='submit']");
+        const originalBtnText = submitButton.innerText;
         submitButton.disabled = true;
-        resultsContainer.innerHTML = "<p>Loading recommendations...</p>";
+        submitButton.innerText = "Analyzing...";
+        
+        // Clear previous results with a fade out effect if needed, but simple clear is fine
+        resultsContainer.innerHTML = "";
 
         try {
           const response = await fetch(`/api/recommend?${params.toString()}`);
@@ -137,35 +57,47 @@
           }
 
           if (payload.recommendations?.length) {
+            const listItems = payload.recommendations.map(rec => {
+              const percentage = Math.round(rec.score * 100);
+              return `
+                <li class="movie-card">
+                  <div class="movie-header">
+                    <span class="movie-title">${rec.title} <span style="color: var(--text-secondary); font-weight: 400;">(${rec.year})</span></span>
+                    <span class="match-score">${percentage}% Match</span>
+                  </div>
+                  <div class="movie-meta">
+                    <span>⭐ ${rec.rating.toFixed(1)}</span>
+                  </div>
+                  <p class="movie-overview">${rec.overview}</p>
+                </li>
+              `;
+            }).join("");
+
             resultsContainer.innerHTML = `
-              <h2>Top matches</h2>
-              <ul>
-                ${payload.recommendations
-                  .map(
-                    (rec) => `
-                      <li>
-                        <span>${rec.title}</span>
-                        <span class="score">${rec.score.toFixed(3)}</span>
-                      </li>
-                    `
-                  )
-                  .join("")}
+              <h2>✨ Top Matches</h2>
+              <ul class="movie-list">
+                ${listItems}
               </ul>
             `;
           } else {
             const suggestionMarkup = payload.suggestions?.length
               ? `<div class="suggestions">
-                   <strong>No exact match.</strong>
-                   <p>Maybe try:</p>
+                   <strong>No exact match found.</strong>
+                   <p>Did you mean one of these?</p>
                    <ul>${payload.suggestions.map((s) => `<li>${s}</li>`).join("")}</ul>
                  </div>`
               : "";
-            resultsContainer.innerHTML = `<p>No recommendations yet.</p>${suggestionMarkup}`;
+            resultsContainer.innerHTML = `<p style="text-align: center; color: var(--text-secondary);">No recommendations found.</p>${suggestionMarkup}`;
           }
         } catch (error) {
-          resultsContainer.innerHTML = `<p style="color: #dc2626;">${error.message}</p>`;
+          resultsContainer.innerHTML = `
+            <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid var(--danger); padding: 1rem; border-radius: 12px; color: #fca5a5;">
+              <strong>Error:</strong> ${error.message}
+            </div>
+          `;
         } finally {
           submitButton.disabled = false;
+          submitButton.innerText = originalBtnText;
         }
       });
     </script>
